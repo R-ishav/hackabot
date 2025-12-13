@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar as CalendarIcon, User, Briefcase } from 'lucide-react';
+import { User, Briefcase } from 'lucide-react';
+import logo from '../assets/univent-logo.png';
 
 export default function AuthScreen({ onLogin, onRegister }) {
   const navigate = useNavigate();
@@ -44,7 +45,9 @@ export default function AuthScreen({ onLogin, onRegister }) {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 p-4">
        <div className={`bg-white rounded-2xl shadow-2xl w-full ${!isLogin && role === 'student' ? 'max-w-lg' : 'max-w-md'} overflow-hidden flex flex-col transition-all duration-300`}>
           <div className="p-8 bg-slate-50 text-center border-b border-slate-100">
-             <div className="inline-flex p-3 bg-indigo-600 rounded-xl shadow-lg mb-4"><CalendarIcon className="h-8 w-8 text-white" /></div>
+             <div className="inline-flex p-3 bg-indigo-600 rounded-xl shadow-lg mb-4">
+               <img src={logo} alt="UniVent Logo" className="h-8 w-8 object-contain" />
+             </div>
              <h2 className="univent-font text-2xl font-bold text-slate-800">UniVent</h2>
              <p className="text-slate-500 mt-1">Campus Event Navigator</p>
           </div>
@@ -77,7 +80,15 @@ export default function AuthScreen({ onLogin, onRegister }) {
                 </>
              )}
              <div><label className="block text-xs font-bold text-slate-500 uppercase mb-1">Email</label><input type="email" className="w-full px-4 py-2 border rounded-lg" onChange={e => setFormData({...formData, email: e.target.value})} /></div>
-             <div><label className="block text-xs font-bold text-slate-500 uppercase mb-1">Password</label><input type="password" className="w-full px-4 py-2 border rounded-lg" onChange={e => setFormData({...formData, password: e.target.value})} /></div>
+             <div>
+               <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Password</label>
+               <input type="password" className="w-full px-4 py-2 border rounded-lg" onChange={e => setFormData({...formData, password: e.target.value})} />
+               {isLogin && (
+                 <div className="text-right mt-1">
+                   <span className="text-xs text-indigo-600 cursor-pointer select-none hover:underline">Forgot password?</span>
+                 </div>
+               )}
+             </div>
              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
              <button className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-lg mt-2">{isLogin ? 'Login' : 'Register'}</button>
           </form>

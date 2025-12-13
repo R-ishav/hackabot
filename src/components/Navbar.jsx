@@ -1,5 +1,6 @@
 import React from 'react';
-import { Calendar as CalendarIcon, Sun, Moon, LogOut } from 'lucide-react';
+import { Sun, Moon, LogOut } from 'lucide-react';
+import logo from '../assets/univent-logo.png';
 
 export default function Navbar({ currentUser, darkMode, setDarkMode, onLogout }) {
   return (
@@ -7,7 +8,7 @@ export default function Navbar({ currentUser, darkMode, setDarkMode, onLogout })
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <div className="bg-primary p-2 rounded-lg">
-            <CalendarIcon className="h-6 w-6 text-white" />
+            <img src={logo} alt="UniVent Logo" className="h-8 w-8 object-contain" />
           </div>
           <div>
             <h1 className="univent-font text-3xl font-extrabold text-white dark:text-primary leading-tight drop-shadow-lg tracking-wide">UniVent</h1>
