@@ -1,6 +1,9 @@
+import { useEffect } from 'react';
 import React, { useState } from 'react';
 import { Plus, Users, Trash2, X, CheckCircle, QrCode, CheckCheck, Download, Megaphone, MessageCircle } from 'lucide-react';
 import QRScanner from '../components/QRScanner';
+import PostEventModal from '../components/PostEventModal';
+import PosterModal from '../components/PosterModal';
 import * as XLSX from 'xlsx';
 
 // --- CONSTANTS ---
@@ -12,37 +15,12 @@ const CATEGORIES = [
   { name: 'Academic' },
 ];
 
-// --- SUB-COMPONENT: PostEventModal ---
-function PostEventModal({ onClose, onSubmit }) {
-  const [formData, setFormData] = useState({ title: '', date: '', time: '', venue: '', category: 'Technical', description: '' });
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg p-6 border border-slate-200 dark:border-slate-700">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Post New Event</h2>
-        <form onSubmit={(e) => { e.preventDefault(); onSubmit(formData); }} className="space-y-4">
-          <input required placeholder="Event Title" className="w-full p-2 border rounded dark:bg-slate-900 dark:border-slate-600 dark:text-white" onChange={e => setFormData({...formData, title: e.target.value})} />
-          <div className="grid grid-cols-2 gap-4">
-             <input required type="date" className="w-full p-2 border rounded dark:bg-slate-900 dark:border-slate-600 dark:text-white" onChange={e => setFormData({...formData, date: e.target.value})} />
-             <input required type="time" className="w-full p-2 border rounded dark:bg-slate-900 dark:border-slate-600 dark:text-white" onChange={e => setFormData({...formData, time: e.target.value})} />
-          </div>
-          <input required placeholder="Venue" className="w-full p-2 border rounded dark:bg-slate-900 dark:border-slate-600 dark:text-white" onChange={e => setFormData({...formData, venue: e.target.value})} />
-          <select className="w-full p-2 border rounded dark:bg-slate-900 dark:border-slate-600 dark:text-white" onChange={e => setFormData({...formData, category: e.target.value})}>
-             {CATEGORIES.filter(c => c.name !== 'All').map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-          </select>
-          <textarea required placeholder="Description" rows="3" className="w-full p-2 border rounded dark:bg-slate-900 dark:border-slate-600 dark:text-white" onChange={e => setFormData({...formData, description: e.target.value})}></textarea>
-          <div className="flex gap-3 pt-2">
-             <button type="button" onClick={onClose} className="flex-1 p-2 border rounded hover:bg-slate-100 dark:text-white dark:hover:bg-slate-700">Cancel</button>
-             <button className="flex-1 p-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Post Event</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
 
 // --- MAIN COMPONENT ---
 export default function AdminDashboard({ user, events, onAddEvent, onDeleteEvent }) {
+  useEffect(() => {
+    document.title = 'UniVent';
+  }, []);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewRegistrants, setViewRegistrants] = useState(null);
   const [scanningEventId, setScanningEventId] = useState(null);
@@ -52,6 +30,8 @@ export default function AdminDashboard({ user, events, onAddEvent, onDeleteEvent
   const [announcementEventId, setAnnouncementEventId] = useState(null);
   const [announcementText, setAnnouncementText] = useState('');
   const [viewDiscussions, setViewDiscussions] = useState(null);
+  // Poster modal state
+  const [posterUrl, setPosterUrl] = useState(null);
 
   // Helper to get ID safely (MongoDB uses _id, frontend might use id)
   const getEventId = (event) => event._id || event.id;
@@ -181,47 +161,86 @@ export default function AdminDashboard({ user, events, onAddEvent, onDeleteEvent
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-             <h3 className="text-slate-500 text-xs font-bold uppercase mb-2">Total Events Posted</h3>
-             <p className="text-3xl font-black text-slate-800 dark:text-white">{myEvents.length}</p>
+    <div className="min-h-screen w-full bg-gradient-to-br from-indigo-900 to-slate-900 bg-fixed px-2 sm:px-6 lg:px-16 py-10 animate-fadein">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          <div className="bg-white/80 dark:bg-slate-800/90 p-8 rounded-3xl shadow-2xl border-0 flex flex-col items-center hover:scale-105 transition-transform duration-300">
+            <h3 className="text-indigo-600 text-xs font-extrabold uppercase mb-2 tracking-widest">Total Events Posted</h3>
+            <p className="text-4xl font-extrabold text-slate-800 dark:text-white animate-bounce-slow">{myEvents.length}</p>
           </div>
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-             <h3 className="text-slate-500 text-xs font-bold uppercase mb-2">Total Registrations</h3>
-             <p className="text-3xl font-black text-indigo-600 dark:text-indigo-400">{totalRegistrations}</p>
+          <div className="bg-white/80 dark:bg-slate-800/90 p-8 rounded-3xl shadow-2xl border-0 flex flex-col items-center hover:scale-105 transition-transform duration-300">
+            <h3 className="text-slate-500 text-xs font-extrabold uppercase mb-2 tracking-widest">Total Registrations</h3>
+            <p className="text-4xl font-extrabold text-indigo-600 dark:text-indigo-400 animate-bounce-slow">{totalRegistrations}</p>
           </div>
-          <button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 text-white p-6 rounded-2xl shadow-lg shadow-indigo-200 hover:shadow-xl hover:scale-[1.02] transition-all flex flex-col justify-center items-center gap-2">
-             <Plus className="h-8 w-8" /><span className="font-bold">Post New Event</span>
+          <button onClick={() => setIsModalOpen(true)}
+            className="bg-gradient-to-r from-indigo-700 to-slate-700 text-white p-8 rounded-3xl shadow-2xl hover:scale-110 hover:shadow-indigo-200/60 transition-all flex flex-col justify-center items-center gap-2 font-extrabold text-lg tracking-wide focus:outline-none focus:ring-4 focus:ring-indigo-300 animate-wiggle"
+          >
+            <Plus className="h-10 w-10 animate-spin-slow" />
+            <span>Post New Event</span>
           </button>
-       </div>
+        </div>
 
-       <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Your Events</h2>
-       
-       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <h2 className="univent-font text-3xl font-extrabold text-slate-100 dark:text-white mb-10 tracking-tight drop-shadow-lg">Your Events</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           {myEvents.length > 0 ? (
-             myEvents.map(event => {
-               const eventId = getEventId(event);
-               return (
-               <div key={eventId} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col">
-                  <div className={`h-24 bg-gradient-to-r ${event.imageColor || 'from-indigo-500 to-purple-600'} p-4`}><h3 className="text-white font-bold text-lg leading-tight">{event.title}</h3><p className="text-white/80 text-sm">{new Date(event.date).toDateString()}</p></div>
-                  <div className="p-4 flex-1">
-                     <div className="flex justify-between items-center mb-4">
-                        <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 text-sm"><Users className="h-4 w-4" /><span className="font-bold">{event.registrants ? event.registrants.length : 0} Registered</span></div>
-                        <span className="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded text-slate-500">{event.category}</span>
-                     </div>
-                     <div className="flex gap-2 mt-auto">
-                        <button onClick={() => setViewRegistrants(eventId)} className="flex-1 py-2 bg-indigo-50 dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 rounded-lg text-sm font-bold hover:bg-indigo-100 transition-colors">View Students</button>
-                        <button onClick={() => setViewDiscussions(eventId)} className="p-2 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/40 transition-colors" title="View Discussions"><MessageCircle className="h-5 w-5" /></button>
-                        <button onClick={() => setAnnouncementEventId(eventId)} className="p-2 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors" title="Post Announcement"><Megaphone className="h-5 w-5" /></button>
-                        <button onClick={() => handleViewAttendance(eventId)} className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors" title="View Attendance"><CheckCheck className="h-5 w-5" /></button>
-                        <button onClick={() => setScanningEventId(eventId)} className="p-2 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors" title="Scan QR Code"><QrCode className="h-5 w-5" /></button>
-                        <button onClick={() => onDeleteEvent(eventId)} className="p-2 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-lg hover:bg-red-100 transition-colors"><Trash2 className="h-5 w-5" /></button>
-                     </div>
+            myEvents.map(event => {
+              const eventId = getEventId(event);
+              return (
+                <div key={eventId} className="bg-white/80 dark:bg-slate-800/90 rounded-3xl border-0 shadow-xl overflow-hidden flex flex-col hover:scale-[1.03] hover:shadow-2xl transition-all duration-300 group animate-float">
+                  <div
+                    className={`h-32 relative p-6 ${!event.poster ? `bg-gradient-to-r from-indigo-800 to-slate-800` : ''}`}
+                    style={event.poster ? {
+                      backgroundImage: `url(${event.poster})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat',
+                    } : {}}
+                  >
+                    {event.poster && <div className="absolute inset-0 bg-black/30 z-0" style={{borderRadius: 'inherit'}}></div>}
+                    <div className="relative z-10 flex flex-col h-full justify-between">
+                      <div className="h-full flex flex-col justify-between">
+                        <div>
+                          <h3 className="text-white font-extrabold text-2xl leading-tight drop-shadow-lg animate-pop-in">{event.title}</h3>
+                          <p className="text-white/90 text-base font-semibold drop-shadow-md">{new Date(event.date).toDateString()}</p>
+                          <span className="inline-block mt-2 bg-white/20 backdrop-blur text-indigo-600 text-xs font-extrabold px-4 py-1 rounded-full shadow-lg tracking-widest animate-bounce-slow">
+                            {event.category}
+                          </span>
+                        </div>
+                        {event.poster && (
+                          <button
+                            className="absolute top-4 right-4 bg-gradient-to-r from-indigo-700 to-slate-700 text-white font-extrabold px-3 py-2 rounded-full shadow-lg text-xs z-20 hover:scale-110 hover:shadow-indigo-200/60 transition-all duration-200 animate-wiggle"
+                            onClick={() => setPosterUrl(event.poster)}
+                          >
+                            View Poster
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
-               </div>
-             )})
-          ) : (<div className="col-span-full text-center py-12 text-slate-500">You haven't posted any events yet.</div>)}
+                  <div className="p-6 flex-1 flex flex-col gap-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex items-center gap-3 text-indigo-700 dark:text-indigo-300 text-base font-bold animate-pop-in">
+                        <Users className="h-5 w-5 animate-bounce-slow" />
+                        <span>{event.registrants ? event.registrants.length : 0} Registered</span>
+                      </div>
+                      <span className="text-xs px-3 py-1 bg-indigo-100 dark:bg-slate-700 rounded-full text-indigo-700 font-bold tracking-wide animate-bounce-slow">{event.category}</span>
+                    </div>
+                    <div className="flex gap-3 mt-auto">
+                      <button onClick={() => setViewRegistrants(eventId)} className="flex-1 py-2 bg-gradient-to-r from-indigo-700 to-slate-700 text-white rounded-xl text-base font-extrabold shadow-md hover:scale-105 hover:shadow-lg transition-all duration-200 animate-wiggle">View Students</button>
+                      <button onClick={() => setViewDiscussions(eventId)} className="p-2 bg-slate-200/40 text-slate-700 rounded-xl hover:bg-slate-300/60 transition-colors animate-pop-in" title="View Discussions"><MessageCircle className="h-5 w-5" /></button>
+                      <button onClick={() => setAnnouncementEventId(eventId)} className="p-2 bg-indigo-200/40 text-indigo-700 rounded-xl hover:bg-indigo-300/60 transition-colors animate-pop-in" title="Post Announcement"><Megaphone className="h-5 w-5" /></button>
+                      <button onClick={() => handleViewAttendance(eventId)} className="p-2 bg-slate-200/40 text-slate-700 rounded-xl hover:bg-slate-300/60 transition-colors animate-pop-in" title="View Attendance"><CheckCheck className="h-5 w-5" /></button>
+                      <button onClick={() => setScanningEventId(eventId)} className="p-2 bg-indigo-200/40 text-indigo-700 rounded-xl hover:bg-indigo-300/60 transition-colors animate-pop-in" title="Scan QR Code"><QrCode className="h-5 w-5" /></button>
+                      <button onClick={() => onDeleteEvent(eventId)} className="p-2 bg-slate-200/40 text-slate-700 rounded-xl hover:bg-slate-300/60 transition-colors animate-pop-in"><Trash2 className="h-5 w-5" /></button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="col-span-full text-center py-12 text-slate-400">You haven't posted any events yet.</div>
+          )}
        </div>
 
        {viewRegistrants && (
@@ -244,8 +263,13 @@ export default function AdminDashboard({ user, events, onAddEvent, onDeleteEvent
              </div>
           </div>
        )}
-       {isModalOpen && <PostEventModal onClose={() => setIsModalOpen(false)} onSubmit={(data) => { onAddEvent(data); setIsModalOpen(false); }} />}
+      {isModalOpen && <PostEventModal onClose={() => setIsModalOpen(false)} onSubmit={(data) => { onAddEvent(data); setIsModalOpen(false); }} />}
        
+       {/* Poster Modal (single instance, outside event map) */}
+       {posterUrl && (
+         <PosterModal imageUrl={posterUrl} onClose={() => setPosterUrl(null)} />
+       )}
+
        {/* Attendance Modal */}
        {viewAttendance && (
          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
@@ -256,7 +280,6 @@ export default function AdminDashboard({ user, events, onAddEvent, onDeleteEvent
                  <X className="h-5 w-5" />
                </button>
              </div>
-             
              {loadingAttendance ? (
                <p className="text-center text-slate-500 py-8">Loading attendance data...</p>
              ) : (
@@ -292,7 +315,6 @@ export default function AdminDashboard({ user, events, onAddEvent, onDeleteEvent
                  )}
                </div>
              )}
-             
              <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                <div className="flex justify-between items-center">
                  <p className="text-sm font-bold text-slate-600 dark:text-slate-400">
@@ -410,6 +432,7 @@ export default function AdminDashboard({ user, events, onAddEvent, onDeleteEvent
            </div>
          </div>
        )}
+      </div>
     </div>
   );
 }

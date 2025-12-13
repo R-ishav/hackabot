@@ -12,17 +12,26 @@ export default function EventCard({ event, isStudent, isRegistered, onAction, on
   const [activeTab, setActiveTab] = useState('details');
   const [comment, setComment] = useState('');
 
-  const gradientStyle = {
-    background: gradientMap[event.imageColor] || 'linear-gradient(to right, #3b82f6, #22d3ee)'
-  };
+   const gradientStyle = event.poster
+      ? {
+            backgroundImage: `url(${event.poster})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            position: 'relative',
+         }
+      : {
+            background: gradientMap[event.imageColor] || 'linear-gradient(to right, #3b82f6, #22d3ee)'
+         };
 
   return (
     <div className="group bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all flex flex-col h-full">
       <div className="h-32 relative p-6 flex flex-col justify-between" style={gradientStyle}>
-         <div className="absolute top-4 right-4 bg-black/30 backdrop-blur text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+         <div className="absolute inset-0 bg-black/40 z-0" style={{borderRadius: 'inherit'}}></div>
+         <div className="absolute top-4 right-4 bg-black/30 backdrop-blur text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg z-10">
             {event.category}
          </div>
-         <div>
+         <div className="relative z-10">
             <h3 className="text-white text-xl font-bold shadow-md drop-shadow-lg">{event.title}</h3>
             <p className="text-white/95 text-sm drop-shadow-md">{event.society}</p>
          </div>

@@ -1,20 +1,23 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import AuthScreen from './components/AuthScreen';
 import StudentDashboard from './dashboards/StudentDashboard';
 import AdminDashboard from './dashboards/AdminDashboard';
+import CoverPage from './components/CoverPage';
 import { Loader2 } from 'lucide-react';
 
 // Connect to your local backend
 const API_URL = "http://localhost:5000/api";
 
-export default function App() {
+function AppRoutes(props) {
   const [currentUser, setCurrentUser] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [registrations, setRegistrations] = useState({}); // Store registrations by eventId
+  const navigate = useNavigate();
 
   // --- Notification Helper ---
   const addNotification = (message, type = 'info') => {
@@ -37,7 +40,6 @@ export default function App() {
 
   useEffect(() => {
     fetchEvents();
-    
     // Check if user was already logged in (persist session)
     const savedUser = localStorage.getItem('campusUser');
     if (savedUser) {
@@ -250,7 +252,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
-      
       {/* Notifications Toast */}
       <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
         {notifications.map(n => (
@@ -260,35 +261,51 @@ export default function App() {
         ))}
       </div>
 
-      {!currentUser ? (
-        <AuthScreen onLogin={handleLogin} onRegister={handleRegister} />
-      ) : (
-        <>
-          <Navbar 
-            currentUser={currentUser} 
-            darkMode={darkMode} 
-            setDarkMode={setDarkMode} 
-            onLogout={handleLogout} 
-          />
-          
-          {currentUser.role === 'admin' ? (
-            <AdminDashboard 
-              user={currentUser} 
-              events={events} 
-              onAddEvent={handleAddEvent} 
-              onDeleteEvent={handleDeleteEvent} 
-            />
+      <Routes>
+        <Route path="/" element={<CoverPage navigate={navigate} />} />
+        <Route path="/student-login" element={<AuthScreen onLogin={handleLogin} onRegister={handleRegister} />} />
+        <Route path="/admin-login" element={<AuthScreen onLogin={handleLogin} onRegister={handleRegister} />} />
+        <Route path="/dashboard" element={
+          currentUser ? (
+            <>
+              <Navbar 
+                currentUser={currentUser} 
+                darkMode={darkMode} 
+                setDarkMode={setDarkMode} 
+                onLogout={handleLogout} 
+              />
+              {currentUser.role === 'admin' ? (
+                <AdminDashboard 
+                  key={events.length}
+                  user={currentUser} 
+                  events={events} 
+                  onAddEvent={handleAddEvent} 
+                  onDeleteEvent={handleDeleteEvent} 
+                />
+              ) : (
+                <StudentDashboard 
+                  key={events.length}
+                  user={currentUser} 
+                  events={events} 
+                  registrations={registrations}
+                  onRegisterInterest={handleRegisterInterest} 
+                  onAddComment={handleAddComment} 
+                />
+              )}
+            </>
           ) : (
-            <StudentDashboard 
-              user={currentUser} 
-              events={events} 
-              registrations={registrations}
-              onRegisterInterest={handleRegisterInterest} 
-              onAddComment={handleAddComment} 
-            />
-          )}
-        </>
-      )}
+            <CoverPage navigate={navigate} />
+          )
+        } />
+      </Routes>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <AppRoutes />
+    </Router>
   );
 }

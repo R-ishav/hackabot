@@ -29,7 +29,8 @@ export const INITIAL_EVENTS = [
     description: "Join us for a day of innovation featuring guest speakers from leading tech companies.",
     registrants: [ { id: 'student1', name: 'John Doe', time: '2023-10-10' } ],
     imageColor: "from-blue-500 to-cyan-400",
-    comments: []
+    comments: [],
+    coordinates: [20.3548, 85.8169]
   },
   {
     id: 2,
@@ -43,7 +44,8 @@ export const INITIAL_EVENTS = [
     description: "Auditions for the annual winter fest. Singers, dancers, and actors welcome.",
     registrants: [],
     imageColor: "from-purple-500 to-pink-400",
-    comments: []
+    comments: [],
+    coordinates: [20.3558, 85.8179]
   },
   {
     id: 3,
@@ -57,6 +59,7 @@ export const INITIAL_EVENTS = [
     description: "Cheer for your department! The semi-finals begin this weekend.",
     registrants: [],
     imageColor: "from-green-400 to-emerald-500",
-    comments: []
+    comments: [],
+    coordinates: [20.3538, 85.8159]
   }
 ];

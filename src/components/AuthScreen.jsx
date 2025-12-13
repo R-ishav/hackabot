@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Calendar as CalendarIcon, User, Briefcase } from 'lucide-react';
 
 export default function AuthScreen({ onLogin, onRegister }) {
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [role, setRole] = useState('student');
   const [formData, setFormData] = useState({ 
@@ -10,29 +12,31 @@ export default function AuthScreen({ onLogin, onRegister }) {
   });
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
     if (isLogin) {
-      const success = onLogin(formData.email, formData.password);
-      if (!success) setError('Invalid email or password');
+      const success = await onLogin(formData.email, formData.password);
+      if (success) {
+        navigate('/dashboard');
+      } else {
+        setError('Invalid email or password');
+      }
     } else {
       if (!formData.name || !formData.email || !formData.password) {
         setError('Please fill in required fields');
         return;
       }
-      
       if (role === 'student' && (!formData.rollNumber || !formData.course || !formData.branch || !formData.year || !formData.gender || !formData.phone)) {
-          setError('Please fill in all student details');
-          return;
+        setError('Please fill in all student details');
+        return;
       }
-
       if (role === 'admin' && !formData.societyName) {
-           setError('Please fill in society name');
-           return;
+        setError('Please fill in society name');
+        return;
       }
-      onRegister({ ...formData, role });
+      await onRegister({ ...formData, role });
+      navigate('/dashboard');
     }
   };
 
@@ -41,7 +45,7 @@ export default function AuthScreen({ onLogin, onRegister }) {
        <div className={`bg-white rounded-2xl shadow-2xl w-full ${!isLogin && role === 'student' ? 'max-w-lg' : 'max-w-md'} overflow-hidden flex flex-col transition-all duration-300`}>
           <div className="p-8 bg-slate-50 text-center border-b border-slate-100">
              <div className="inline-flex p-3 bg-indigo-600 rounded-xl shadow-lg mb-4"><CalendarIcon className="h-8 w-8 text-white" /></div>
-             <h2 className="text-2xl font-bold text-slate-800">Events Everywhere</h2>
+             <h2 className="univent-font text-2xl font-bold text-slate-800">UniVent</h2>
              <p className="text-slate-500 mt-1">Campus Event Navigator</p>
           </div>
 
