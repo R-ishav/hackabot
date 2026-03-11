@@ -99,9 +99,17 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
     setIsSearching(true);
     
     try {
+      // Create a LatLngBounds around KIIT (Bhubaneswar)
+      const kiitCenter = new window.google.maps.LatLng(20.3548, 85.8169);
+      const circle = new window.google.maps.Circle({
+        center: kiitCenter,
+        radius: 30000 // 30km radius around KIIT
+      });
+      
       const request = {
         input: query,
-        componentRestrictions: { country: 'in' }
+        locationBias: circle.getBounds(), // Bias results to KIIT area
+        componentRestrictions: { country: 'in' } // Restrict to India only
       };
       
       autocompleteServiceRef.current.getPlacePredictions(request, (predictions, status) => {
