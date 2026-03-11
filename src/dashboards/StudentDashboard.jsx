@@ -182,16 +182,7 @@ export default function StudentDashboard({ user = { xp: 0 }, events = [], regist
                           onShowTicket={(reg) => handleShowTicket(reg, event.title)}
                           onAddComment={onAddComment} 
                         />
-                        {event.poster && (
-                          <div className="absolute top-0 left-0 w-full h-32 flex items-end justify-end p-4 pointer-events-none">
-                            <button
-                              className="bg-white/80 hover:bg-white text-indigo-600 font-bold px-2 py-1 rounded shadow text-xs z-20 pointer-events-auto"
-                              onClick={() => setPosterUrl(event.poster)}
-                            >
-                              View Poster
-                            </button>
-                          </div>
-                        )}
+
                       </div>
                     </div>
                   );
