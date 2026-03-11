@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Search, X, Loader2, Navigation, Check, Building, Star } from 'lucide-react';
 
 // Google Places API Key - Replace with your own key
-const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyAmu3ZJ_L1nGU-RTz-3ryA9qSqLjggP0RE';
+const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyBBkk7RPS8d07RhnIqsr02Q5nrwQ0bj8CU';
 
 // Predefined KIIT Campus locations for quick selection (fallback when no API key)
 const KIIT_LOCATIONS = [
@@ -162,7 +162,7 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
     setIsSearching(false);
   };
 
-  // Debounced search - always use Nominatim, it's more reliable
+  // Debounced search - use Google Places if available
   useEffect(() => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
@@ -170,8 +170,8 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
     
     if (searchQuery.length >= 2) {
       searchTimeoutRef.current = setTimeout(() => {
-        // Use Nominatim - it works without API key issues
-        searchWithNominatim(searchQuery);
+        // Try Google Places first, fallback to Nominatim
+        searchWithGoogle(searchQuery);
       }, 300);
     } else {
       setSearchResults([]);
