@@ -7,8 +7,8 @@ import AdminDashboard from './dashboards/AdminDashboard';
 import CoverPage from './components/CoverPage';
 import { Loader2 } from 'lucide-react';
 
-// Connect to your local backend
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+// Connect to your backend
+const API_URL = "https://hackabot-9anw.onrender.com/api";
 
 function AppRoutes(props) {
   const [currentUser, setCurrentUser] = useState(null);

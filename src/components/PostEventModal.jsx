@@ -36,7 +36,7 @@ export default function PostEventModal({ onClose, onSubmit }) {
       uploadData.append('poster', posterFile);
 
       try {
-        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+        const API_URL = "https://hackabot-9anw.onrender.com/api";
         const res = await fetch(`${API_URL}/upload`, {
           method: 'POST',
           body: uploadData,

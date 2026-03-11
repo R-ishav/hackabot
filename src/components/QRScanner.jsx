@@ -61,7 +61,7 @@ export default function QRScanner({ eventId, onClose, onScanSuccess }) {
     }
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+      const API_URL = "https://hackabot-9anw.onrender.com/api";
       const res = await fetch(`${API_URL}/events/${eventId}/verify-qr`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

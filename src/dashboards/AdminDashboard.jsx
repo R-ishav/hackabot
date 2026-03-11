@@ -60,7 +60,7 @@ export default function AdminDashboard({ user, events, onAddEvent, onDeleteEvent
   const handleViewAttendance = async (eventId) => {
     setLoadingAttendance(true);
     try {
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+      const API_URL = "https://hackabot-9anw.onrender.com/api";
       const res = await fetch(`${API_URL}/events/${eventId}/registrations`);
       const data = await res.json();
       
@@ -88,7 +88,7 @@ export default function AdminDashboard({ user, events, onAddEvent, onDeleteEvent
     if (!announcementText.trim()) return;
     
     try {
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+      const API_URL = "https://hackabot-9anw.onrender.com/api";
       const res = await fetch(`${API_URL}/events/${eventId}/announcement`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
