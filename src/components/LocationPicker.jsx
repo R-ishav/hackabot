@@ -1,5 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Search, X, Loader2, Navigation, Check } from 'lucide-react';
+import { MapPin, Search, X, Loader2, Navigation, Check, Building, Star } from 'lucide-react';
+
+// Predefined KIIT Campus locations for quick selection
+const KIIT_LOCATIONS = [
+  { name: "KIIT Campus 1", fullName: "KIIT Campus 1, Patia, Bhubaneswar", coordinates: [20.3563, 85.8143] },
+  { name: "KIIT Campus 2", fullName: "KIIT Campus 2, Patia, Bhubaneswar", coordinates: [20.3551, 85.8148] },
+  { name: "KIIT Campus 3", fullName: "KIIT Campus 3, Patia, Bhubaneswar", coordinates: [20.3538, 85.8155] },
+  { name: "KIIT Campus 4", fullName: "KIIT Campus 4, Patia, Bhubaneswar", coordinates: [20.3525, 85.8162] },
+  { name: "KIIT Campus 5", fullName: "KIIT Campus 5, Patia, Bhubaneswar", coordinates: [20.3512, 85.8175] },
+  { name: "KIIT Campus 6", fullName: "KIIT Campus 6, Patia, Bhubaneswar", coordinates: [20.3535, 85.8195] },
+  { name: "KIIT Campus 7", fullName: "KIIT Campus 7, Patia, Bhubaneswar", coordinates: [20.3548, 85.8188] },
+  { name: "KIIT Campus 8", fullName: "KIIT Campus 8, Patia, Bhubaneswar", coordinates: [20.3565, 85.8178] },
+  { name: "KIIT Campus 9", fullName: "KIIT Campus 9, Patia, Bhubaneswar", coordinates: [20.3578, 85.8165] },
+  { name: "KIIT Campus 10", fullName: "KIIT Campus 10, Patia, Bhubaneswar", coordinates: [20.3588, 85.8152] },
+  { name: "KIIT Campus 11", fullName: "KIIT Campus 11, Patia, Bhubaneswar", coordinates: [20.3595, 85.8140] },
+  { name: "KIIT Campus 12", fullName: "KIIT Campus 12, Patia, Bhubaneswar", coordinates: [20.3518, 85.8205] },
+  { name: "KIIT Campus 13 (Stadium)", fullName: "KIIT Campus 13 Stadium, Patia, Bhubaneswar", coordinates: [20.3505, 85.8218] },
+  { name: "KIIT Campus 14", fullName: "KIIT Campus 14, Patia, Bhubaneswar", coordinates: [20.3492, 85.8225] },
+  { name: "KIIT Campus 15", fullName: "KIIT Campus 15, Patia, Bhubaneswar", coordinates: [20.3480, 85.8232] },
+  { name: "KIIT Auditorium", fullName: "KIIT Main Auditorium, Patia, Bhubaneswar", coordinates: [20.3545, 85.8170] },
+  { name: "KIIT Convention Center", fullName: "KIIT Convention Center, Patia, Bhubaneswar", coordinates: [20.3558, 85.8158] },
+  { name: "KIIT Food Court", fullName: "KIIT Food Court, Patia, Bhubaneswar", coordinates: [20.3540, 85.8182] },
+  { name: "KIIT Library", fullName: "KIIT Central Library, Patia, Bhubaneswar", coordinates: [20.3552, 85.8175] },
+  { name: "KISS Campus", fullName: "KISS Campus, Patia, Bhubaneswar", coordinates: [20.3498, 85.8135] },
+];
 
 export default function LocationPicker({ value, onChange, onCoordinatesChange }) {
   const [showMapSearch, setShowMapSearch] = useState(false);
@@ -7,19 +31,23 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedMapLocation, setSelectedMapLocation] = useState(null);
+  const [showKiitLocations, setShowKiitLocations] = useState(true);
   const searchTimeoutRef = useRef(null);
 
-  // Search for locations using OpenStreetMap Nominatim API - NO location bias, worldwide search
+  // Search for locations using OpenStreetMap Nominatim API - biased to KIIT/Bhubaneswar area
   const searchLocations = async (query) => {
     if (!query || query.length < 3) {
       setSearchResults([]);
+      setShowKiitLocations(true);
       return;
     }
 
+    setShowKiitLocations(false);
     setIsSearching(true);
     try {
+      // Add viewbox bias for Bhubaneswar/KIIT area (but don't restrict to it)
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=10&addressdetails=1`,
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=10&addressdetails=1&viewbox=85.78,20.38,85.88,20.32&bounded=0`,
         {
           headers: {
             'Accept-Language': 'en',
@@ -35,10 +63,21 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
         type: item.type
       }));
       
-      setSearchResults(results);
+      // Also filter KIIT locations that match the query
+      const matchingKiitLocations = KIIT_LOCATIONS.filter(loc => 
+        loc.name.toLowerCase().includes(query.toLowerCase()) ||
+        loc.fullName.toLowerCase().includes(query.toLowerCase())
+      );
+      
+      // Combine KIIT matches first, then API results
+      setSearchResults([...matchingKiitLocations, ...results]);
     } catch (error) {
       console.error('Error searching locations:', error);
-      setSearchResults([]);
+      // On error, still show matching KIIT locations
+      const matchingKiitLocations = KIIT_LOCATIONS.filter(loc => 
+        loc.name.toLowerCase().includes(query.toLowerCase())
+      );
+      setSearchResults(matchingKiitLocations);
     }
     setIsSearching(false);
   };
@@ -217,12 +256,43 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
                     <p className="text-xs mt-1">Try a different search term</p>
                   </div>
                 ) : (
-                  <div className="p-6 text-center text-slate-400">
-                    <Search className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    <p className="text-sm font-medium">Search for a location</p>
-                    <p className="text-xs mt-1">Results will appear here</p>
+                  <div className="overflow-y-auto">
+                    <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-100 dark:border-indigo-800">
+                      <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-300 flex items-center gap-1">
+                        <Star className="h-3 w-3" /> KIIT Campus Locations
+                      </p>
+                    </div>
+                    <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                      {KIIT_LOCATIONS.map((location, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => handleSelectMapLocation(location)}
+                          className={`w-full p-3 text-left hover:bg-indigo-50 dark:hover:bg-slate-700 flex items-start gap-3 transition-colors ${
+                            selectedMapLocation?.fullName === location.fullName 
+                              ? 'bg-indigo-100 dark:bg-indigo-900/30 border-l-4 border-indigo-500' 
+                              : ''
+                          }`}
+                        >
+                          <Building className={`h-4 w-4 mt-0.5 flex-shrink-0 ${
+                            selectedMapLocation?.fullName === location.fullName ? 'text-indigo-600' : 'text-indigo-400'
+                          }`} />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-slate-900 dark:text-white">
+                              {location.name}
+                            </p>
+                          </div>
+                          {selectedMapLocation?.fullName === location.fullName && (
+                            <Check className="h-4 w-4 text-indigo-600 flex-shrink-0" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="p-3 bg-slate-50 dark:bg-slate-900 text-center">
+                      <p className="text-xs text-slate-400">Or search for any location above</p>
+                    </div>
                   </div>
-                )}
+                )}}
               </div>
 
               {/* Map Preview */}
