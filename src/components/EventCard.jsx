@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Clock, MapPin, Users, Heart, CheckCircle, Send } from 'lucide-react';
+import { Clock, MapPin, Users, Heart, CheckCircle, Send, Eye } from 'lucide-react';
+import PosterModal from './PosterModal';
 
 const gradientMap = {
   'from-blue-500 to-cyan-400': 'linear-gradient(to right, #3b82f6, #22d3ee)',
@@ -11,6 +12,7 @@ const gradientMap = {
 export default function EventCard({ event, isStudent, isRegistered, onAction, onAddComment, registration, onShowTicket }) {
   const [activeTab, setActiveTab] = useState('details');
   const [comment, setComment] = useState('');
+  const [showPoster, setShowPoster] = useState(false);
 
    const gradientStyle = event.poster
       ? {
@@ -26,12 +28,40 @@ export default function EventCard({ event, isStudent, isRegistered, onAction, on
 
   return (
     <div className="group bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all flex flex-col h-full">
+      {/* Poster Modal */}
+      {showPoster && event.poster && (
+        <PosterModal imageUrl={event.poster} onClose={() => setShowPoster(false)} />
+      )}
+      
       <div className="h-32 relative p-6 flex flex-col justify-between" style={gradientStyle}>
-         <div className="absolute inset-0 bg-black/40 z-0" style={{borderRadius: 'inherit'}}></div>
-         <div className="absolute top-4 right-4 bg-black/30 backdrop-blur text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg z-10">
-            {event.category}
+         {/* Gradient overlay - darker at bottom for text readability */}
+         <div 
+            className="absolute inset-0 z-0" 
+            style={{
+               background: event.poster 
+                  ? 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 100%)' 
+                  : 'transparent',
+               borderRadius: 'inherit'
+            }}
+         ></div>
+         
+         <div className="flex justify-between items-start relative z-10">
+            <div className="absolute top-0 right-0 flex gap-2">
+               {event.poster && (
+                  <button
+                     onClick={() => setShowPoster(true)}
+                     className="bg-white/20 backdrop-blur hover:bg-white/40 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg transition-all flex items-center gap-1"
+                  >
+                     <Eye className="h-3 w-3" /> View Poster
+                  </button>
+               )}
+               <span className="bg-black/30 backdrop-blur text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                  {event.category}
+               </span>
+            </div>
          </div>
-         <div className="relative z-10">
+         
+         <div className="relative z-10 mt-auto">
             <h3 className="text-white text-xl font-bold shadow-md drop-shadow-lg">{event.title}</h3>
             <p className="text-white/95 text-sm drop-shadow-md">{event.society}</p>
          </div>

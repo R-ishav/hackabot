@@ -5,6 +5,10 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import qrcode from 'qrcode';
 import dotenv from 'dotenv';
+import multer from 'multer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -15,9 +19,29 @@ const JWT_SECRET = process.env.JWT_SECRET || 'campus-events-secret-key-12345';
 // MongoDB connection: prefer environment variable (Atlas), fallback to local
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/campus-events';
 
+// --- FILE UPLOAD SETUP ---
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadsDir),
+  filename: (req, file, cb) => {
+    const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname);
+    cb(null, uniqueName);
+  }
+});
+const upload = multer({ storage });
+
 // --- MIDDLEWARE ---
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static(uploadsDir));
 
 // --- UTILITY FUNCTIONS ---
 function generateUniqueCode() {
@@ -75,6 +99,7 @@ const eventSchema = new mongoose.Schema({
   description: String,
   imageColor: String,
   createdBy: String,
+  poster: String, // URL path to the uploaded poster image
   coordinates: [Number], // [latitude, longitude] for map location
   registrants: [{ 
     id: String, 
@@ -349,6 +374,17 @@ app.get('/api/users/:id/registrations', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'Could not fetch user registrations' });
   }
+});
+
+// File Upload Endpoint
+app.post('/api/upload', upload.single('poster'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+  // Return full URL for production use
+  const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
+  const filePath = `${baseUrl}/uploads/${req.file.filename}`;
+  res.json({ filePath });
 });
 
 app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
