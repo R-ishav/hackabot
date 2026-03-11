@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Search, X, Loader2, Navigation, Check, Building, Star } from 'lucide-react';
 
 // Google Places API Key - Replace with your own key
-const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyAmu3ZJ_L1nGU-RTz-3ryA9qSqLjggP0RE';
 
 // Predefined KIIT Campus locations for quick selection (fallback when no API key)
 const KIIT_LOCATIONS = [
@@ -90,29 +90,35 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
 
     setIsSearching(true);
     
-    autocompleteServiceRef.current.getPlacePredictions(
-      {
-        input: query,
-        locationBias: {
-          center: { lat: 20.3548, lng: 85.8169 }, // KIIT area
-          radius: 50000 // 50km radius
+    try {
+      autocompleteServiceRef.current.getPlacePredictions(
+        {
+          input: query,
+          componentRestrictions: { country: 'in' } // Bias to India
+        },
+        (predictions, status) => {
+          console.log('Google Places status:', status, predictions);
+          if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+            const results = predictions.map(p => ({
+              name: p.structured_formatting?.main_text || p.description.split(',')[0],
+              fullName: p.description,
+              placeId: p.place_id,
+              coordinates: null // Will be fetched when selected
+            }));
+            setSearchResults(results);
+          } else {
+            console.warn('Google Places search failed:', status);
+            // Fallback to Nominatim on failure
+            searchWithNominatim(query);
+            return;
+          }
+          setIsSearching(false);
         }
-      },
-      (predictions, status) => {
-        if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
-          const results = predictions.map(p => ({
-            name: p.structured_formatting?.main_text || p.description.split(',')[0],
-            fullName: p.description,
-            placeId: p.place_id,
-            coordinates: null // Will be fetched when selected
-          }));
-          setSearchResults(results);
-        } else {
-          setSearchResults([]);
-        }
-        setIsSearching(false);
-      }
-    );
+      );
+    } catch (error) {
+      console.error('Google Places error:', error);
+      searchWithNominatim(query);
+    }
   };
 
   // Fallback search using Nominatim (when no API key)
