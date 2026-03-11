@@ -83,38 +83,44 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
 
   // Search using Google Places Autocomplete
   const searchWithGoogle = async (query) => {
-    if (!autocompleteServiceRef.current || !query || query.length < 2) {
+    if (!query || query.length < 2) {
       setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    // If Google not loaded or service not ready, use fallback
+    if (!googleLoaded || !autocompleteServiceRef.current) {
+      console.log('Google not ready, using Nominatim fallback');
+      searchWithNominatim(query);
       return;
     }
 
     setIsSearching(true);
     
     try {
-      autocompleteServiceRef.current.getPlacePredictions(
-        {
-          input: query,
-          componentRestrictions: { country: 'in' } // Bias to India
-        },
-        (predictions, status) => {
-          console.log('Google Places status:', status, predictions);
-          if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
-            const results = predictions.map(p => ({
-              name: p.structured_formatting?.main_text || p.description.split(',')[0],
-              fullName: p.description,
-              placeId: p.place_id,
-              coordinates: null // Will be fetched when selected
-            }));
-            setSearchResults(results);
-          } else {
-            console.warn('Google Places search failed:', status);
-            // Fallback to Nominatim on failure
-            searchWithNominatim(query);
-            return;
-          }
+      const request = {
+        input: query,
+        componentRestrictions: { country: 'in' }
+      };
+      
+      autocompleteServiceRef.current.getPlacePredictions(request, (predictions, status) => {
+        console.log('Google Places response:', status, predictions);
+        
+        if (status === 'OK' && predictions && predictions.length > 0) {
+          const results = predictions.map(p => ({
+            name: p.structured_formatting?.main_text || p.description.split(',')[0],
+            fullName: p.description,
+            placeId: p.place_id,
+            coordinates: null
+          }));
+          setSearchResults(results);
           setIsSearching(false);
+        } else {
+          console.log('Google returned no results, falling back to Nominatim');
+          searchWithNominatim(query);
         }
-      );
+      });
     } catch (error) {
       console.error('Google Places error:', error);
       searchWithNominatim(query);
@@ -156,7 +162,7 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
     setIsSearching(false);
   };
 
-  // Debounced search
+  // Debounced search - always use Nominatim, it's more reliable
   useEffect(() => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
@@ -164,11 +170,8 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
     
     if (searchQuery.length >= 2) {
       searchTimeoutRef.current = setTimeout(() => {
-        if (googleLoaded && GOOGLE_API_KEY) {
-          searchWithGoogle(searchQuery);
-        } else {
-          searchWithNominatim(searchQuery);
-        }
+        // Use Nominatim - it works without API key issues
+        searchWithNominatim(searchQuery);
       }, 300);
     } else {
       setSearchResults([]);
