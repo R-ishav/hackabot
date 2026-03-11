@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Search, X, Loader2, Navigation, Check, Building, Star } from 'lucide-react';
 
-// Predefined KIIT Campus locations for quick selection
+// Google Places API Key - Replace with your own key
+const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+
+// Predefined KIIT Campus locations for quick selection (fallback when no API key)
 const KIIT_LOCATIONS = [
   { name: "KIIT Campus 1", fullName: "KIIT Campus 1, Patia, Bhubaneswar", coordinates: [20.3563, 85.8143] },
   { name: "KIIT Campus 2", fullName: "KIIT Campus 2, Patia, Bhubaneswar", coordinates: [20.3551, 85.8148] },
@@ -31,28 +34,99 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedMapLocation, setSelectedMapLocation] = useState(null);
-  const [showKiitLocations, setShowKiitLocations] = useState(true);
+  const [googleLoaded, setGoogleLoaded] = useState(false);
   const searchTimeoutRef = useRef(null);
+  const autocompleteServiceRef = useRef(null);
+  const placesServiceRef = useRef(null);
+  const mapDivRef = useRef(null);
 
-  // Search for locations using OpenStreetMap Nominatim API - biased to KIIT/Bhubaneswar area
-  const searchLocations = async (query) => {
-    if (!query || query.length < 3) {
-      setSearchResults([]);
-      setShowKiitLocations(true);
+  // Load Google Maps script
+  useEffect(() => {
+    if (!GOOGLE_API_KEY) {
+      console.warn('No Google Maps API key provided. Using fallback search.');
       return;
     }
 
-    setShowKiitLocations(false);
+    if (window.google?.maps?.places) {
+      setGoogleLoaded(true);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_API_KEY}&libraries=places`;
+    script.async = true;
+    script.onload = () => {
+      setGoogleLoaded(true);
+    };
+    script.onerror = () => {
+      console.error('Failed to load Google Maps script');
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      // Cleanup not needed as Google Maps should persist
+    };
+  }, []);
+
+  // Initialize services when modal opens and Google is loaded
+  useEffect(() => {
+    if (showMapSearch && googleLoaded && mapDivRef.current) {
+      if (!autocompleteServiceRef.current) {
+        autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
+      }
+      if (!placesServiceRef.current) {
+        // Need a map or div for PlacesService
+        placesServiceRef.current = new window.google.maps.places.PlacesService(mapDivRef.current);
+      }
+    }
+  }, [showMapSearch, googleLoaded]);
+
+  // Search using Google Places Autocomplete
+  const searchWithGoogle = async (query) => {
+    if (!autocompleteServiceRef.current || !query || query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    
+    autocompleteServiceRef.current.getPlacePredictions(
+      {
+        input: query,
+        locationBias: {
+          center: { lat: 20.3548, lng: 85.8169 }, // KIIT area
+          radius: 50000 // 50km radius
+        }
+      },
+      (predictions, status) => {
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+          const results = predictions.map(p => ({
+            name: p.structured_formatting?.main_text || p.description.split(',')[0],
+            fullName: p.description,
+            placeId: p.place_id,
+            coordinates: null // Will be fetched when selected
+          }));
+          setSearchResults(results);
+        } else {
+          setSearchResults([]);
+        }
+        setIsSearching(false);
+      }
+    );
+  };
+
+  // Fallback search using Nominatim (when no API key)
+  const searchWithNominatim = async (query) => {
+    if (!query || query.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+
     setIsSearching(true);
     try {
-      // Add viewbox bias for Bhubaneswar/KIIT area (but don't restrict to it)
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=10&addressdetails=1&viewbox=85.78,20.38,85.88,20.32&bounded=0`,
-        {
-          headers: {
-            'Accept-Language': 'en',
-          }
-        }
+        { headers: { 'Accept-Language': 'en' } }
       );
       const data = await response.json();
       
@@ -60,24 +134,18 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
         name: item.display_name.split(',').slice(0, 2).join(', '),
         fullName: item.display_name,
         coordinates: [parseFloat(item.lat), parseFloat(item.lon)],
-        type: item.type
+        placeId: null
       }));
       
-      // Also filter KIIT locations that match the query
-      const matchingKiitLocations = KIIT_LOCATIONS.filter(loc => 
-        loc.name.toLowerCase().includes(query.toLowerCase()) ||
-        loc.fullName.toLowerCase().includes(query.toLowerCase())
-      );
-      
-      // Combine KIIT matches first, then API results
-      setSearchResults([...matchingKiitLocations, ...results]);
-    } catch (error) {
-      console.error('Error searching locations:', error);
-      // On error, still show matching KIIT locations
-      const matchingKiitLocations = KIIT_LOCATIONS.filter(loc => 
+      // Also add matching KIIT locations
+      const matchingKiit = KIIT_LOCATIONS.filter(loc => 
         loc.name.toLowerCase().includes(query.toLowerCase())
       );
-      setSearchResults(matchingKiitLocations);
+      
+      setSearchResults([...matchingKiit, ...results]);
+    } catch (error) {
+      console.error('Error searching:', error);
+      setSearchResults([]);
     }
     setIsSearching(false);
   };
@@ -88,10 +156,14 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
       clearTimeout(searchTimeoutRef.current);
     }
     
-    if (searchQuery.length >= 3) {
+    if (searchQuery.length >= 2) {
       searchTimeoutRef.current = setTimeout(() => {
-        searchLocations(searchQuery);
-      }, 400);
+        if (googleLoaded && GOOGLE_API_KEY) {
+          searchWithGoogle(searchQuery);
+        } else {
+          searchWithNominatim(searchQuery);
+        }
+      }, 300);
     } else {
       setSearchResults([]);
     }
@@ -101,17 +173,50 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [searchQuery]);
+  }, [searchQuery, googleLoaded]);
 
-  // Handle map location selection
-  const handleSelectMapLocation = (location) => {
-    setSelectedMapLocation(location);
-    onCoordinatesChange(location.coordinates);
-    console.log('LocationPicker - Map location selected:', location);
-    console.log('LocationPicker - Coordinates:', location.coordinates);
+  // Get place details (coordinates) from Google
+  const getPlaceDetails = (placeId, callback) => {
+    if (!placesServiceRef.current) return;
+
+    placesServiceRef.current.getDetails(
+      { placeId, fields: ['geometry', 'name', 'formatted_address'] },
+      (place, status) => {
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && place?.geometry?.location) {
+          callback({
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng()
+          });
+        } else {
+          callback(null);
+        }
+      }
+    );
   };
 
-  // Confirm and close map search
+  // Handle location selection
+  const handleSelectMapLocation = (location) => {
+    if (location.placeId && !location.coordinates) {
+      // Need to fetch coordinates from Google
+      setIsSearching(true);
+      getPlaceDetails(location.placeId, (coords) => {
+        if (coords) {
+          const updatedLocation = {
+            ...location,
+            coordinates: [coords.lat, coords.lng]
+          };
+          setSelectedMapLocation(updatedLocation);
+          onCoordinatesChange(updatedLocation.coordinates);
+        }
+        setIsSearching(false);
+      });
+    } else if (location.coordinates) {
+      setSelectedMapLocation(location);
+      onCoordinatesChange(location.coordinates);
+    }
+  };
+
+  // Confirm and close
   const handleConfirmLocation = () => {
     setShowMapSearch(false);
     setSearchQuery('');
@@ -129,7 +234,7 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
 
   return (
     <div className="space-y-3">
-      {/* Venue Name Input - What displays on the event tile */}
+      {/* Venue Name Input */}
       <div>
         <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
           Venue Name (shown on event card)
@@ -143,7 +248,7 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
         />
       </div>
 
-      {/* Map Location Picker */}
+      {/* Map Location Picker Button */}
       <div>
         <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
           Map Location (for navigation)
@@ -173,6 +278,9 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
         </button>
       </div>
 
+      {/* Hidden div for PlacesService */}
+      <div ref={mapDivRef} style={{ display: 'none' }} />
+
       {/* Map Search Modal */}
       {showMapSearch && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -200,18 +308,22 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search any place worldwide... (city, restaurant, landmark, address)"
+                  placeholder="Search any place... (restaurants, shops, landmarks, addresses)"
                   className="w-full pl-10 pr-4 py-3 border rounded-lg dark:bg-slate-900 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-indigo-500"
                   autoFocus
                 />
               </div>
               <p className="text-xs text-slate-400 mt-2">
-                Type at least 3 characters. Search works worldwide - try any address, landmark, or business name.
+                {GOOGLE_API_KEY ? (
+                  <>Powered by Google Places - search any location worldwide</>
+                ) : (
+                  <>⚠️ No Google API key - using limited search. Add VITE_GOOGLE_MAPS_API_KEY for full search.</>
+                )}
               </p>
             </div>
 
             {/* Content: Search Results + Map */}
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 flex overflow-hidden" style={{ minHeight: '350px' }}>
               {/* Search Results */}
               <div className="w-1/2 border-r border-slate-200 dark:border-slate-700 overflow-y-auto">
                 {isSearching ? (
@@ -223,7 +335,7 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
                   <div className="divide-y divide-slate-100 dark:divide-slate-700">
                     {searchResults.map((location, index) => (
                       <button
-                        key={index}
+                        key={location.placeId || index}
                         type="button"
                         onClick={() => handleSelectMapLocation(location)}
                         className={`w-full p-3 text-left hover:bg-indigo-50 dark:hover:bg-slate-700 flex items-start gap-3 transition-colors ${
@@ -249,7 +361,7 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
                       </button>
                     ))}
                   </div>
-                ) : searchQuery.length >= 3 ? (
+                ) : searchQuery.length >= 2 ? (
                   <div className="p-6 text-center text-slate-400">
                     <MapPin className="h-8 w-8 mx-auto mb-2 opacity-30" />
                     <p className="text-sm font-medium">No locations found</p>
@@ -259,11 +371,11 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
                   <div className="overflow-y-auto">
                     <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-100 dark:border-indigo-800">
                       <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-300 flex items-center gap-1">
-                        <Star className="h-3 w-3" /> KIIT Campus Locations
+                        <Star className="h-3 w-3" /> Quick Select - KIIT Campus
                       </p>
                     </div>
                     <div className="divide-y divide-slate-100 dark:divide-slate-700">
-                      {KIIT_LOCATIONS.map((location, index) => (
+                      {KIIT_LOCATIONS.slice(0, 10).map((location, index) => (
                         <button
                           key={index}
                           type="button"
@@ -282,17 +394,14 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
                               {location.name}
                             </p>
                           </div>
-                          {selectedMapLocation?.fullName === location.fullName && (
-                            <Check className="h-4 w-4 text-indigo-600 flex-shrink-0" />
-                          )}
                         </button>
                       ))}
                     </div>
                     <div className="p-3 bg-slate-50 dark:bg-slate-900 text-center">
-                      <p className="text-xs text-slate-400">Or search for any location above</p>
+                      <p className="text-xs text-slate-400">Or search for any location above ↑</p>
                     </div>
                   </div>
-                )}}
+                )}
               </div>
 
               {/* Map Preview */}
@@ -317,6 +426,7 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
                     style={{ border: 0, minHeight: '300px' }}
                     allowFullScreen=""
                     loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
                   />
                 </div>
               </div>
@@ -325,12 +435,12 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
             {/* Footer */}
             <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between bg-slate-50 dark:bg-slate-900">
               <div className="text-sm text-slate-500">
-                {selectedMapLocation ? (
+                {selectedMapLocation?.coordinates ? (
                   <span className="text-green-600 dark:text-green-400">
-                    ✓ Location selected: [{selectedMapLocation.coordinates[0].toFixed(4)}, {selectedMapLocation.coordinates[1].toFixed(4)}]
+                    ✓ [{selectedMapLocation.coordinates[0].toFixed(5)}, {selectedMapLocation.coordinates[1].toFixed(5)}]
                   </span>
                 ) : (
-                  <span>No location selected yet</span>
+                  <span>No location selected</span>
                 )}
               </div>
               <div className="flex gap-2">
@@ -344,9 +454,9 @@ export default function LocationPicker({ value, onChange, onCoordinatesChange })
                 <button
                   type="button"
                   onClick={handleConfirmLocation}
-                  disabled={!selectedMapLocation}
+                  disabled={!selectedMapLocation?.coordinates}
                   className={`px-4 py-2 text-sm font-medium rounded-lg flex items-center gap-2 ${
-                    selectedMapLocation 
+                    selectedMapLocation?.coordinates
                       ? 'bg-indigo-600 text-white hover:bg-indigo-700' 
                       : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                   }`}
