@@ -384,6 +384,3 @@ export default function MapView({ isOpen, onClose, events = [], onRefresh }) {
     </div>
   );
 }
-    </div>
-  );
-}
