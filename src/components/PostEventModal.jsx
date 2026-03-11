@@ -1,12 +1,31 @@
 import React, { useState } from 'react';
 import { CATEGORIES } from '../data/constants';
+import LocationPicker from './LocationPicker';
 
 export default function PostEventModal({ onClose, onSubmit }) {
-  const [formData, setFormData] = useState({ title: '', date: '', time: '', venue: '', category: 'Technical', description: '', poster: '' });
+  const [formData, setFormData] = useState({ 
+    title: '', 
+    date: '', 
+    time: '', 
+    venue: '', 
+    category: 'Technical', 
+    description: '', 
+    poster: '',
+    coordinates: null 
+  });
   const [posterFile, setPosterFile] = useState(null);
 
   const handleFileChange = (e) => {
     setPosterFile(e.target.files[0]);
+  };
+
+  const handleVenueChange = (venue) => {
+    setFormData({ ...formData, venue });
+  };
+
+  const handleCoordinatesChange = (coordinates) => {
+    console.log('PostEventModal - Coordinates received from LocationPicker:', coordinates);
+    setFormData({ ...formData, coordinates });
   };
 
   const handleFormSubmit = async (e) => {
@@ -17,7 +36,8 @@ export default function PostEventModal({ onClose, onSubmit }) {
       uploadData.append('poster', posterFile);
 
       try {
-        const res = await fetch('http://localhost:5000/api/upload', {
+        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+        const res = await fetch(`${API_URL}/upload`, {
           method: 'POST',
           body: uploadData,
         });
@@ -27,7 +47,10 @@ export default function PostEventModal({ onClose, onSubmit }) {
         console.error('Error uploading file:', err);
       }
     }
-    onSubmit({ ...formData, poster: posterPath });
+    const eventData = { ...formData, poster: posterPath };
+    console.log('PostEventModal - Submitting event with data:', eventData);
+    console.log('PostEventModal - Coordinates being sent:', eventData.coordinates);
+    onSubmit(eventData);
   };
 
   return (
@@ -40,7 +63,14 @@ export default function PostEventModal({ onClose, onSubmit }) {
              <input required type="date" className="w-full p-2 border rounded dark:bg-slate-900 dark:border-slate-600 dark:text-white" onChange={e => setFormData({...formData, date: e.target.value})} />
              <input required type="time" className="w-full p-2 border rounded dark:bg-slate-900 dark:border-slate-600 dark:text-white" onChange={e => setFormData({...formData, time: e.target.value})} />
           </div>
-          <input required placeholder="Venue" className="w-full p-2 border rounded dark:bg-slate-900 dark:border-slate-600 dark:text-white" onChange={e => setFormData({...formData, venue: e.target.value})} />
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Event Location</label>
+            <LocationPicker 
+              value={formData.venue}
+              onChange={handleVenueChange}
+              onCoordinatesChange={handleCoordinatesChange}
+            />
+          </div>
           <select className="w-full p-2 border rounded dark:bg-slate-900 dark:border-slate-600 dark:text-white" onChange={e => setFormData({...formData, category: e.target.value})}>
              {CATEGORIES.filter(c => c.name !== 'All').map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
           </select>

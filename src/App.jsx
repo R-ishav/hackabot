@@ -8,7 +8,7 @@ import CoverPage from './components/CoverPage';
 import { Loader2 } from 'lucide-react';
 
 // Connect to your local backend
-const API_URL = "http://localhost:5000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 function AppRoutes(props) {
   const [currentUser, setCurrentUser] = useState(null);
@@ -31,6 +31,8 @@ function AppRoutes(props) {
     try {
       const res = await fetch(`${API_URL}/events`);
       const data = await res.json();
+      console.log('fetchEvents - Raw data from server:', data);
+      console.log('fetchEvents - Events with coordinates:', data.filter(e => e.coordinates));
       setEvents(data);
     } catch (err) {
       console.error("API Error", err);
@@ -149,6 +151,10 @@ function AppRoutes(props) {
         society: currentUser.societyName || currentUser.name 
       };
       
+      console.log('handleAddEvent - newEvent received:', newEvent);
+      console.log('handleAddEvent - payload with coordinates:', payload.coordinates);
+      console.log('handleAddEvent - Full payload:', JSON.stringify(payload));
+      
       const res = await fetch(`${API_URL}/events`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -156,12 +162,16 @@ function AppRoutes(props) {
       });
 
       if (res.ok) {
-        fetchEvents(); // Refresh list from DB to get the new event
+        const savedEvent = await res.json();
+        console.log('handleAddEvent - Server response:', savedEvent);
+        console.log('handleAddEvent - Saved coordinates:', savedEvent.coordinates);
+        await fetchEvents(); // Refresh list from DB to get the new event
         addNotification("Event posted successfully!", "success");
       } else {
         addNotification("Failed to post event", "error");
       }
     } catch (err) {
+      console.error('handleAddEvent - Error:', err);
       addNotification("Error posting event", "error");
     }
   };
@@ -289,7 +299,8 @@ function AppRoutes(props) {
                   events={events} 
                   registrations={registrations}
                   onRegisterInterest={handleRegisterInterest} 
-                  onAddComment={handleAddComment} 
+                  onAddComment={handleAddComment}
+                  onRefreshEvents={fetchEvents}
                 />
               )}
             </>

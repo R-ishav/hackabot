@@ -75,6 +75,7 @@ const eventSchema = new mongoose.Schema({
   description: String,
   imageColor: String,
   createdBy: String,
+  coordinates: [Number], // [latitude, longitude] for map location
   registrants: [{ 
     id: String, 
     name: String, 
@@ -155,6 +156,8 @@ app.get('/api/events', async (req, res) => {
 // 4. Create Event
 app.post('/api/events', async (req, res) => {
   try {
+    console.log('POST /api/events - Received body:', req.body);
+    console.log('POST /api/events - Coordinates:', req.body.coordinates);
     const newEvent = new Event({
       ...req.body,
       imageColor: "from-indigo-600 to-blue-600",
@@ -162,8 +165,10 @@ app.post('/api/events', async (req, res) => {
       comments: []
     });
     await newEvent.save();
+    console.log('POST /api/events - Saved event:', newEvent);
     res.json(newEvent);
   } catch (err) {
+    console.error('POST /api/events - Error:', err);
     res.status(500).json({ error: err.message });
   }
 });

@@ -1,16 +1,18 @@
 import { useEffect } from 'react';
 import React, { useState, useMemo } from 'react';
-import { Filter, Search, Grid, Calendar as CalendarIcon, Trophy } from 'lucide-react';
-import { CATEGORIES, LEVEL_THRESHOLDS } from '../data/constants'; // Ensure this path matches your project
+import { Filter, Search, Grid, Calendar as CalendarIcon, Trophy, MapPin } from 'lucide-react';
+import { CATEGORIES, LEVEL_THRESHOLDS } from '../data/constants';
 import EventCard from '../components/EventCard';
 import CalendarView from '../components/CalendarView';
 import TicketModal from '../components/TicketModal';
 import PosterModal from '../components/PosterModal';
-
 import MapView from '../components/MapView';
 
+// KIIT University center
+const KIIT_CENTER = [20.3548, 85.8169];
 
-export default function StudentDashboard({ user = { xp: 0 }, events = [], registrations = {}, onRegisterInterest, onAddComment }) {
+
+export default function StudentDashboard({ user = { xp: 0 }, events = [], registrations = {}, onRegisterInterest, onAddComment, onRefreshEvents }) {
   const [mapOpen, setMapOpen] = useState(false);
   useEffect(() => {
     document.title = 'UniVent';
@@ -75,11 +77,14 @@ export default function StudentDashboard({ user = { xp: 0 }, events = [], regist
 
   return (
     <>
-      <MapView isOpen={mapOpen} onClose={() => setMapOpen(false)} />
+      <MapView isOpen={mapOpen} onClose={() => setMapOpen(false)} events={events} onRefresh={onRefreshEvents} />
       <div className="min-h-screen w-full bg-gradient-to-br from-indigo-900 to-slate-900 bg-fixed px-4 sm:px-6 lg:px-8 py-10 animate-fadein">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-end mb-4">
-          <button onClick={() => setMapOpen(true)} className="px-4 py-2 rounded bg-indigo-600 text-white font-semibold shadow hover:bg-indigo-700 transition">Open KIIT Map</button>
+          <button onClick={() => setMapOpen(true)} className="px-4 py-2 rounded bg-indigo-600 text-white font-semibold shadow hover:bg-indigo-700 transition flex items-center gap-2">
+            <MapPin className="h-4 w-4" />
+            View Events on Map
+          </button>
         </div>
         {/* XP Bar */}
         <div className="bg-gradient-to-r from-indigo-800 to-slate-800 rounded-2xl p-6 text-white shadow-xl mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
@@ -108,17 +113,32 @@ export default function StudentDashboard({ user = { xp: 0 }, events = [], regist
                 })}
               </div>
               <div className="mt-6">
-                <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Campus Map</h2>
-                <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm" style={{ width: '100%', height: '180px' }}>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                    <MapPin className="h-3 w-3" /> Event Locations
+                  </h2>
+                  <span className="text-xs text-indigo-500 dark:text-indigo-400">
+                    {events.filter(e => e.coordinates?.length === 2).length} pinned
+                  </span>
+                </div>
+                <div 
+                  className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm cursor-pointer hover:ring-2 hover:ring-indigo-400 transition-all" 
+                  style={{ width: '100%', height: '180px' }}
+                  onClick={() => setMapOpen(true)}
+                >
                   <iframe
-                    title="KIIT University Map"
-                    src="https://www.google.com/maps?q=KIIT+University,+Bhubaneswar,+Odisha,+India&output=embed"
+                    title="Campus Events Map Preview"
+                    src={`https://www.google.com/maps?q=${KIIT_CENTER[0]},${KIIT_CENTER[1]}&z=15&output=embed`}
                     width="100%"
                     height="100%"
-                    style={{ border: 0, width: '100%', height: '100%' }}
-                    allowFullScreen=""
+                    style={{ border: 0, pointerEvents: 'none' }}
                     loading="lazy"
-                  ></iframe>
+                  />
+                  <div className="absolute bottom-2 left-2 right-2 z-10 pointer-events-none">
+                    <div className="bg-white/90 dark:bg-slate-800/90 text-xs text-center py-1 px-2 rounded text-indigo-600 dark:text-indigo-400 font-medium">
+                      Click to view full map with {events.filter(e => e.coordinates?.length === 2).length} events
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

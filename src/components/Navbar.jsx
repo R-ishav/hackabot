@@ -40,3 +40,4 @@ export default function Navbar({ currentUser, darkMode, setDarkMode, onLogout })
     </nav>
   );
 }
+
