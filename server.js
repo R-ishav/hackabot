@@ -101,6 +101,8 @@ const eventSchema = new mongoose.Schema({
   createdBy: String,
   poster: String, // URL path to the uploaded poster image
   coordinates: [Number], // [latitude, longitude] for map location
+  website: String, // Event website URL
+  instagram: String, // Instagram handle
   registrants: [{ 
     id: String, 
     name: String, 

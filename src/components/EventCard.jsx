@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Clock, MapPin, Users, Heart, CheckCircle, Send, Eye } from 'lucide-react';
+import { Clock, MapPin, Users, Heart, CheckCircle, Send, Eye, Globe, Instagram } from 'lucide-react';
 import PosterModal from './PosterModal';
 
 const gradientMap = {
@@ -47,6 +47,17 @@ export default function EventCard({ event, isStudent, isRegistered, onAction, on
          
          <div className="flex justify-between items-start relative z-10">
             <div className="absolute top-0 right-0 flex gap-2">
+               {event.instagram && (
+                  <a
+                     href={`https://instagram.com/${event.instagram.replace('@', '')}`}
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-xs font-bold p-1.5 rounded-full shadow-lg transition-all flex items-center"
+                     title={`@${event.instagram.replace('@', '')}`}
+                  >
+                     <Instagram className="h-3.5 w-3.5" />
+                  </a>
+               )}
                {event.poster && (
                   <button
                      onClick={() => setShowPoster(true)}
@@ -84,6 +95,11 @@ export default function EventCard({ event, isStudent, isRegistered, onAction, on
                   <div className="text-sm text-slate-600 dark:text-slate-300 space-y-1">
                      <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-indigo-500" /> {event.time}</div>
                      <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-indigo-500" /> {event.venue}</div>
+                     {event.website && (
+                        <a href={event.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-indigo-600 hover:text-indigo-700 hover:underline">
+                           <Globe className="h-4 w-4" /> Visit Website
+                        </a>
+                     )}
                   </div>
                </div>
                <p className="text-slate-600 dark:text-slate-400 text-sm mb-6 flex-grow">{event.description}</p>

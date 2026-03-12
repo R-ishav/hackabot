@@ -11,7 +11,9 @@ export default function PostEventModal({ onClose, onSubmit }) {
     category: 'Technical', 
     description: '', 
     poster: '',
-    coordinates: null 
+    coordinates: null,
+    website: '',
+    instagram: ''
   });
   const [posterFile, setPosterFile] = useState(null);
   const [posterInputType, setPosterInputType] = useState('file'); // 'file' or 'url'
@@ -109,6 +111,20 @@ export default function PostEventModal({ onClose, onSubmit }) {
              {CATEGORIES.filter(c => c.name !== 'All').map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
           </select>
           <textarea required placeholder="Description" rows="3" className="w-full p-2 border rounded dark:bg-slate-900 dark:border-slate-600 dark:text-white" onChange={e => setFormData({...formData, description: e.target.value})}></textarea>
+          <div className="grid grid-cols-2 gap-4">
+            <input 
+              type="url" 
+              placeholder="Event Website (optional)" 
+              className="w-full p-2 border rounded dark:bg-slate-900 dark:border-slate-600 dark:text-white placeholder:text-slate-400" 
+              onChange={e => setFormData({...formData, website: e.target.value})} 
+            />
+            <input 
+              type="text" 
+              placeholder="Instagram handle (optional)" 
+              className="w-full p-2 border rounded dark:bg-slate-900 dark:border-slate-600 dark:text-white placeholder:text-slate-400" 
+              onChange={e => setFormData({...formData, instagram: e.target.value})} 
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Event Poster</label>
             <div className="flex gap-2 mb-2">
