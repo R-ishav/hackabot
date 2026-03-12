@@ -42,12 +42,18 @@ export default function PostEventModal({ onClose, onSubmit }) {
     const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
     if (driveMatch) {
       const fileId = driveMatch[1];
-      return `https://drive.google.com/uc?export=view&id=${fileId}`;
+      // Use lh3.googleusercontent.com which works better for embedding
+      return `https://lh3.googleusercontent.com/d/${fileId}`;
     }
     // Match Google Drive open links
     const openMatch = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
     if (openMatch) {
-      return `https://drive.google.com/uc?export=view&id=${openMatch[1]}`;
+      return `https://lh3.googleusercontent.com/d/${openMatch[1]}`;
+    }
+    // Match uc?id= format and convert
+    const ucMatch = url.match(/drive\.google\.com\/uc\?.*id=([a-zA-Z0-9_-]+)/);
+    if (ucMatch) {
+      return `https://lh3.googleusercontent.com/d/${ucMatch[1]}`;
     }
     return url;
   };
