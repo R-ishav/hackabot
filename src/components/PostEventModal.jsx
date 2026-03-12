@@ -36,13 +36,29 @@ export default function PostEventModal({ onClose, onSubmit }) {
     setFormData({ ...formData, coordinates });
   };
 
+  // Convert Google Drive sharing links to direct image URLs
+  const convertDriveLink = (url) => {
+    // Match Google Drive file links
+    const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (driveMatch) {
+      const fileId = driveMatch[1];
+      return `https://drive.google.com/uc?export=view&id=${fileId}`;
+    }
+    // Match Google Drive open links
+    const openMatch = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
+    if (openMatch) {
+      return `https://drive.google.com/uc?export=view&id=${openMatch[1]}`;
+    }
+    return url;
+  };
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     let posterPath = '';
     
     // Use URL if provided, otherwise upload file
     if (posterInputType === 'url' && posterUrl.trim()) {
-      posterPath = posterUrl.trim();
+      posterPath = convertDriveLink(posterUrl.trim());
     } else if (posterFile) {
       const uploadData = new FormData();
       uploadData.append('poster', posterFile);
