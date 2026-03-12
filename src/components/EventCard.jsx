@@ -97,7 +97,7 @@ export default function EventCard({ event, isStudent, isRegistered, onAction, on
                      <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-indigo-500" /> {event.venue}</div>
                      {event.website && (
                         <a href={event.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-indigo-600 hover:text-indigo-700 hover:underline">
-                           <Globe className="h-4 w-4" /> Visit Website
+                           <Globe className="h-4 w-4" /> More Info
                         </a>
                      )}
                   </div>
