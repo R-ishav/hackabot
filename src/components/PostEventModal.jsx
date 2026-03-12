@@ -14,9 +14,17 @@ export default function PostEventModal({ onClose, onSubmit }) {
     coordinates: null 
   });
   const [posterFile, setPosterFile] = useState(null);
+  const [posterInputType, setPosterInputType] = useState('file'); // 'file' or 'url'
+  const [posterUrl, setPosterUrl] = useState('');
 
   const handleFileChange = (e) => {
     setPosterFile(e.target.files[0]);
+    setPosterUrl(''); // Clear URL when file is selected
+  };
+
+  const handleUrlChange = (e) => {
+    setPosterUrl(e.target.value);
+    setPosterFile(null); // Clear file when URL is entered
   };
 
   const handleVenueChange = (venue) => {
@@ -31,7 +39,11 @@ export default function PostEventModal({ onClose, onSubmit }) {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     let posterPath = '';
-    if (posterFile) {
+    
+    // Use URL if provided, otherwise upload file
+    if (posterInputType === 'url' && posterUrl.trim()) {
+      posterPath = posterUrl.trim();
+    } else if (posterFile) {
       const uploadData = new FormData();
       uploadData.append('poster', posterFile);
 
@@ -76,8 +88,46 @@ export default function PostEventModal({ onClose, onSubmit }) {
           </select>
           <textarea required placeholder="Description" rows="3" className="w-full p-2 border rounded dark:bg-slate-900 dark:border-slate-600 dark:text-white" onChange={e => setFormData({...formData, description: e.target.value})}></textarea>
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Event Poster</label>
-            <input type="file" onChange={handleFileChange} className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"/>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Event Poster</label>
+            <div className="flex gap-2 mb-2">
+              <button
+                type="button"
+                onClick={() => setPosterInputType('file')}
+                className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                  posterInputType === 'file'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
+                }`}
+              >
+                Upload File
+              </button>
+              <button
+                type="button"
+                onClick={() => setPosterInputType('url')}
+                className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                  posterInputType === 'url'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
+                }`}
+              >
+                Insert Link
+              </button>
+            </div>
+            {posterInputType === 'file' ? (
+              <input 
+                type="file" 
+                onChange={handleFileChange} 
+                className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+              />
+            ) : (
+              <input 
+                type="url" 
+                placeholder="Paste image URL (Drive link, any image URL)" 
+                value={posterUrl}
+                onChange={handleUrlChange}
+                className="w-full p-2 border rounded dark:bg-slate-900 dark:border-slate-600 dark:text-white placeholder:text-slate-400"
+              />
+            )}
           </div>
           <div className="flex gap-3 pt-2">
              <button type="button" onClick={onClose} className="flex-1 p-2 border rounded hover:bg-slate-100 dark:text-white dark:hover:bg-slate-700">Cancel</button>
