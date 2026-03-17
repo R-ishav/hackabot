@@ -1,16 +1,55 @@
-# React + Vite
+# Hackabot
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Hackabot is a small web app built with **React** and **Vite**. It’s set up for a fast developer experience with Hot Module Reloading (HMR), a clean project structure, and basic linting so you can iterate quickly.
 
-Currently, two official plugins are available:
+> This repository currently uses the default React + Vite setup, and you can customize it into your own chatbot/assistant UI or any React app.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Tech Stack
 
-## React Compiler
+- **React** (UI)
+- **Vite** (dev server + build tool)
+- **ESLint** (linting)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Getting Started
 
-## Expanding the ESLint configuration
+### 1) Install dependencies
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm install
+```
+
+### 2) Run the app locally
+
+```bash
+npm run dev
+```
+
+Vite will print a local URL (usually `http://localhost:5173`). Open it in your browser.
+
+### 3) Build for production
+
+```bash
+npm run build
+```
+
+### 4) Preview the production build
+
+```bash
+npm run preview
+```
+
+## Useful Scripts
+
+- `npm run dev` — start the development server
+- `npm run build` — create an optimized production build
+- `npm run preview` — preview the production build locally
+- `npm run lint` — run ESLint
+
+## Project Notes
+
+- If you plan to deploy, most platforms (Vercel/Netlify/Cloudflare Pages) work well with Vite projects.
+- Want TypeScript? Consider migrating to the Vite React TS template.
+
+## License
+
+Add a license if you plan to share or open-source this project.
