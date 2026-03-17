@@ -1,55 +1,68 @@
-# Hackabot
+# UniVent
 
-Hackabot is a small web app built with **React** and **Vite**. It’s set up for a fast developer experience with Hot Module Reloading (HMR), a clean project structure, and basic linting so you can iterate quickly.
+**UniVent** is a campus event management website created for the *easy management of events on campus*.
 
-> This repository currently uses the default React + Vite setup, and you can customize it into your own chatbot/assistant UI or any React app.
+It helps college societies and students manage campus events in one place: society admins can publish events, and students can explore events, register, and navigate to the event venue using the website.
+
+## Key Features
+
+### Society Admins
+- List/publish events with important details (title, description, date/time, venue, etc.)
+- Keep event information updated for students
+
+### Students
+- Browse upcoming campus events
+- View complete event details
+- Register for events through the website
+- Navigate to the venue (via map links)
 
 ## Tech Stack
 
-- **React** (UI)
-- **Vite** (dev server + build tool)
-- **ESLint** (linting)
+- **React** — frontend UI
+- **Vite** — fast dev server + build tool
+- **ESLint** — linting / code quality
 
-## Getting Started
+## Getting Started (Local Setup)
 
 ### 1) Install dependencies
-
 ```bash
 npm install
 ```
 
-### 2) Run the app locally
-
+### 2) Start the development server
 ```bash
 npm run dev
 ```
 
-Vite will print a local URL (usually `http://localhost:5173`). Open it in your browser.
+Vite will print a local URL (commonly `http://localhost:5173`). Open it in your browser.
 
-### 3) Build for production
+## Build & Preview
 
+### Production build
 ```bash
 npm run build
 ```
 
-### 4) Preview the production build
-
+### Preview production build locally
 ```bash
 npm run preview
 ```
 
-## Useful Scripts
+## Scripts
 
-- `npm run dev` — start the development server
+- `npm run dev` — run locally in development mode
 - `npm run build` — create an optimized production build
 - `npm run preview` — preview the production build locally
 - `npm run lint` — run ESLint
 
-## Project Notes
+## Notes / Future Improvements
 
-- If you plan to deploy, most platforms (Vercel/Netlify/Cloudflare Pages) work well with Vite projects.
-- Want TypeScript? Consider migrating to the Vite React TS template.
+- Role-based authentication (Society Admin vs Student)
+- Admin dashboard for managing events and registrations
+- Capacity limits, waitlists, and registration confirmations
+- Calendar integration and reminders
+- Better venue support using coordinates + embedded maps
 
-## License
+## Hackathon Context
 
-Add a license if you plan to share or open-source this project.
+This project was built for the Hackabot hackathon.
