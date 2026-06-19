@@ -1,8 +1,54 @@
-# UniVent
+For the past few years, I haven't been able to share much on LinkedIn due to account restrictions. Now that I'm back, I'm excited to showcase some of the projects I've worked on throughout my journey.
 
-**UniVent** is a campus event management website created for the *easy management of events on campus*.
+One of them is UniVent, a campus event navigation platform that I built during my 2nd year.
 
-It helps college societies and students manage campus events in one place: society admins can publish events, and students can explore events, register, and navigate to the event venue using the website.
+The idea came from a problem I experienced firsthand as a student.
+
+On most campuses, event information is scattered across WhatsApp groups, Instagram stories, posters, and word of mouth. Students often miss opportunities simply because they never hear about them in time. Event organizers struggle to reach the right audience, track registrations, and manage attendance efficiently.
+
+I wanted to build a solution that could bring everything into one place.
+
+Introducing UniVent 🚀
+
+A centralized platform that helps students discover and participate in campus events while giving organizers the tools they need to manage them effectively.
+
+What UniVent offers
+
+For Students:
+• Discover ongoing and upcoming events in one place
+• Register instantly for events
+• Receive digital tickets with QR codes
+• View event details, venues, and locations
+
+For Organizers:
+• Create and publish events
+• Upload posters and event details
+• Manage registrations efficiently
+• Scan and verify QR-code tickets during entry
+• Export attendance records for analysis and reporting
+
+Technologies Used
+• React + Vite
+• Tailwind CSS
+• Node.js & Express.js
+• MongoDB
+• QR Code Generation & Verification
+• Location Search & Mapping Features
+
+What I learned while building it
+• Developing a complete full-stack application from scratch
+• Designing scalable backend APIs and database structures
+• Managing file uploads and user-generated content
+• Integrating QR-based ticketing workflows
+• Creating smoother user experiences through continuous iteration
+• Debugging real-world challenges involving API integrations, environment configurations, deployment issues, and authentication flows
+
+More importantly, this project taught me how technology can solve everyday problems that students face.
+
+Building UniVent was both challenging and incredibly rewarding, and it remains one of my favorite projects because it was inspired by a real need within the student community.
+
+I'd be happy to share a demo or discuss the development process with anyone interested.
+
 
 ## Key Features
 
